@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 
 pygame.init()
 
@@ -33,12 +34,15 @@ jugador_velocidad = 5
 direccion_actual = 'abajo'
 
 # Enemigos IA
-num_enemigos = 3
+num_enemigos = 5
 enemigos = []
 for _ in range(num_enemigos):
     x = random.randint(0, ancho - 50)
     y = random.randint(0, alto - 50)
-    enemigo = pygame.Rect(x, y, 50, 50)
+    enemigo = {
+        'rect': pygame.Rect(x, y, 50, 50),  # Rectángulo que representa la posición y tamaño del enemigo
+        'tiempo_disparo': random.randint(30, 120)  # Tiempo para que dispare
+    }
     enemigos.append(enemigo)
 
 enemigo_velocidad = 2
@@ -48,6 +52,8 @@ enemigo_imagen = pygame.transform.scale(enemigo_imagen, (50, 50))
 # Balas
 balas = []
 velocidad_bala = 10
+balas_enemigo = []  # Lista para las balas de los enemigos
+velocidad_bala_enemigo = 7
 
 # Reloj
 reloj = pygame.time.Clock()
@@ -60,13 +66,17 @@ while corriendo:
             corriendo = False
         elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 3:  # Click derecho
             if direccion_actual == 'izquierda':
-                bala = {'rect': pygame.Rect(jugador.x, jugador.y + jugador.height // 2, 10, 5), 'dir': 'izquierda'}
+                bala = {'rect': pygame.Rect(jugador.x, jugador.y + jugador.height // 2, 10, 5),
+                        'dir_x': -velocidad_bala, 'dir_y': 0}
             elif direccion_actual == 'derecha':
-                bala = {'rect': pygame.Rect(jugador.x + jugador.width, jugador.y + jugador.height // 2, 10, 5), 'dir': 'derecha'}
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width, jugador.y + jugador.height // 2, 10, 5),
+                        'dir_x': velocidad_bala, 'dir_y': 0}
             elif direccion_actual == 'arriba':
-                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y, 5, 10), 'dir': 'arriba'}
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y, 5, 10), 'dir_x': 0,
+                        'dir_y': -velocidad_bala}
             elif direccion_actual == 'abajo':
-                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y + jugador.height, 5, 10), 'dir': 'abajo'}
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y + jugador.height, 5, 10),
+                        'dir_x': 0, 'dir_y': velocidad_bala}
             balas.append(bala)
 
     # Movimiento del jugador y actualización de dirección
@@ -86,29 +96,45 @@ while corriendo:
 
     # Movimiento de los enemigos (IA simple que sigue al jugador)
     for enemigo in enemigos:
-        if enemigo.x < jugador.x:
-            enemigo.x += enemigo_velocidad
-        elif enemigo.x > jugador.x:
-            enemigo.x -= enemigo_velocidad
-        if enemigo.y < jugador.y:
-            enemigo.y += enemigo_velocidad
-        elif enemigo.y > jugador.y:
-            enemigo.y -= enemigo_velocidad
+        if enemigo['rect'].x < jugador.x:
+            enemigo['rect'].x += enemigo_velocidad
+        elif enemigo['rect'].x > jugador.x:
+            enemigo['rect'].x -= enemigo_velocidad
+        if enemigo['rect'].y < jugador.y:
+            enemigo['rect'].y += enemigo_velocidad
+        elif enemigo['rect'].y > jugador.y:
+            enemigo['rect'].y -= enemigo_velocidad
 
-    # Mover balas
+        # Temporizador para disparo
+        enemigo['tiempo_disparo'] -= 1
+        if enemigo['tiempo_disparo'] <= 0:
+            # Reinicia el temporizador y dispara
+            enemigo['tiempo_disparo'] = random.randint(30, 120)
+
+            # Calcular dirección hacia el jugador
+            dx = jugador.x - enemigo['rect'].x
+            dy = jugador.y - enemigo['rect'].y
+            distancia = math.hypot(dx, dy)
+            if distancia != 0:
+                dir_x = (dx / distancia) * velocidad_bala_enemigo
+                dir_y = (dy / distancia) * velocidad_bala_enemigo
+                bala_enemigo = {'rect': pygame.Rect(enemigo['rect'].x, enemigo['rect'].y, 10, 10), 'dir_x': dir_x,
+                                'dir_y': dir_y}
+                balas_enemigo.append(bala_enemigo)
+
+    # Mover balas del jugador
     for bala in balas[:]:
-        if bala['dir'] == 'izquierda':
-            bala['rect'].x -= velocidad_bala
-        elif bala['dir'] == 'derecha':
-            bala['rect'].x += velocidad_bala
-        elif bala['dir'] == 'arriba':
-            bala['rect'].y -= velocidad_bala
-        elif bala['dir'] == 'abajo':
-            bala['rect'].y += velocidad_bala
-
-        if (bala['rect'].x < 0 or bala['rect'].x > ancho or
-                bala['rect'].y < 0 or bala['rect'].y > alto):
+        bala['rect'].x += bala['dir_x']
+        bala['rect'].y += bala['dir_y']
+        if (bala['rect'].x < 0 or bala['rect'].x > ancho or bala['rect'].y < 0 or bala['rect'].y > alto):
             balas.remove(bala)
+
+    # Mover balas de los enemigos
+    for bala in balas_enemigo[:]:
+        bala['rect'].x += bala['dir_x']
+        bala['rect'].y += bala['dir_y']
+        if (bala['rect'].x < 0 or bala['rect'].x > ancho or bala['rect'].y < 0 or bala['rect'].y > alto):
+            balas_enemigo.remove(bala)
 
     # Seleccionar la imagen del jugador según la dirección
     if direccion_actual == 'izquierda':
@@ -126,11 +152,15 @@ while corriendo:
 
     # Dibujar enemigos
     for enemigo in enemigos:
-        pantalla.blit(enemigo_imagen, (enemigo.x, enemigo.y))
+        pantalla.blit(enemigo_imagen, (enemigo['rect'].x, enemigo['rect'].y))
 
-    # Dibujar balas
+    # Dibujar balas del jugador
     for bala in balas:
         pygame.draw.rect(pantalla, (255, 0, 0), bala['rect'])
+
+    # Dibujar balas de los enemigos
+    for bala in balas_enemigo:
+        pygame.draw.rect(pantalla, (0, 255, 0), bala['rect'])
 
     pygame.display.flip()
     reloj.tick(60)
