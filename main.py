@@ -2,9 +2,10 @@ import pygame
 
 pygame.init()
 
-# Configuración de la pantalla
-ancho = 800
-alto = 600
+# Obtener las dimensiones de la pantalla y hacer la ventana más grande
+info_pantalla = pygame.display.Info()
+ancho = int(info_pantalla.current_w * 0.9)  # 90% del ancho de la pantalla
+alto = int(info_pantalla.current_h * 0.8)   # 90% del alto de la pantalla
 pantalla = pygame.display.set_mode((ancho, alto))
 pygame.display.set_caption('TACTICAL BATTLE')
 
@@ -30,6 +31,10 @@ jugador_imagen_arriba = pygame.transform.rotate(jugador_imagen_original, -90)
 jugador_velocidad = 5
 direccion_actual = 'abajo'  # Dirección inicial
 
+# Balas
+balas = []
+velocidad_bala = 10
+
 # Reloj
 reloj = pygame.time.Clock()
 corriendo = True
@@ -39,6 +44,17 @@ while corriendo:
     for evento in pygame.event.get():
         if evento.type == pygame.QUIT:
             corriendo = False
+        elif evento.type == pygame.MOUSEBUTTONDOWN and evento.button == 3:  # Click derecho
+            # Crear bala en la dirección actual
+            if direccion_actual == 'izquierda':
+                bala = {'rect': pygame.Rect(jugador.x, jugador.y + jugador.height // 2, 10, 5), 'dir': 'izquierda'}
+            elif direccion_actual == 'derecha':
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width, jugador.y + jugador.height // 2, 10, 5), 'dir': 'derecha'}
+            elif direccion_actual == 'arriba':
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y, 5, 10), 'dir': 'arriba'}
+            elif direccion_actual == 'abajo':
+                bala = {'rect': pygame.Rect(jugador.x + jugador.width // 2, jugador.y + jugador.height, 5, 10), 'dir': 'abajo'}
+            balas.append(bala)
 
     # Movimiento del jugador y actualización de dirección
     teclas = pygame.key.get_pressed()
@@ -55,6 +71,22 @@ while corriendo:
         jugador.y += jugador_velocidad
         direccion_actual = 'abajo'
 
+    # Mover balas
+    for bala in balas[:]:
+        if bala['dir'] == 'izquierda':
+            bala['rect'].x -= velocidad_bala
+        elif bala['dir'] == 'derecha':
+            bala['rect'].x += velocidad_bala
+        elif bala['dir'] == 'arriba':
+            bala['rect'].y -= velocidad_bala
+        elif bala['dir'] == 'abajo':
+            bala['rect'].y += velocidad_bala
+
+        # Eliminar la bala si sale de la pantalla
+        if (bala['rect'].x < 0 or bala['rect'].x > ancho or
+                bala['rect'].y < 0 or bala['rect'].y > alto):
+            balas.remove(bala)
+
     # Seleccionar la imagen del jugador según la dirección
     if direccion_actual == 'izquierda':
         jugador_imagen = jugador_imagen_izquierda
@@ -68,6 +100,10 @@ while corriendo:
     # Dibujar en pantalla
     pantalla.blit(fondo, (0, 0))
     pantalla.blit(jugador_imagen, (jugador.x, jugador.y))  # Dibujar la imagen del jugador en su posición
+
+    # Dibujar balas
+    for bala in balas:
+        pygame.draw.rect(pantalla, (0, 0, 0), bala['rect'])
 
     pygame.display.flip()
     reloj.tick(60)
