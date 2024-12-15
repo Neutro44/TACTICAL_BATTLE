@@ -401,13 +401,82 @@ def mostrar_mensaje_fin_juego(mensaje):
     pygame.display.flip()
     pygame.time.wait(3000)  # Espera de 3 segundos antes de cerrar
 
-#Bucle principal del juego (se actualiza con los proyectiles enemigos)
-while corriendo:
-    for evento in pygame.event.get():
-        if evento.type == pygame.QUIT:
-            corriendo = False
-        if evento.type == pygame.KEYDOWN:
-            if evento.key == pygame.K_SPACE:
+# Definir colores
+BLANCO = (255, 255, 255)
+NEGRO = (0, 0, 0)
+
+# Configurar la pantalla
+pantalla = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("Tactical Battle")
+
+# Función para mostrar texto en pantalla
+def mostrar_texto(texto, fuente, color, x, y):
+    etiqueta = fuente.render(texto, True, color)
+    pantalla.blit(etiqueta, (x, y))
+
+# Función para crear el menú principal
+def menu_principal():
+    fuente = pygame.font.SysFont('Arial', 40)
+    while True:
+        pantalla.fill(BLANCO)
+        mostrar_texto("Tactical Battle", fuente, NEGRO, 300, 150)
+        mostrar_texto("1. Jugar", fuente, NEGRO, 350, 250)
+        mostrar_texto("2. Salir", fuente, NEGRO, 350, 300)
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_1:  # El jugador elige jugar
+                    seleccionar_dificultad()
+                    return
+                elif evento.key == pygame.K_2:  # El jugador elige salir
+                    pygame.quit()
+                    return
+        
+        pygame.display.update()
+
+# Función para seleccionar la dificultad
+def seleccionar_dificultad():
+    fuente = pygame.font.SysFont('Arial', 40)
+    while True:
+        pantalla.fill(BLANCO)
+        mostrar_texto("Seleccionar Dificultad", fuente, NEGRO, 250, 150)
+        mostrar_texto("1. Baja", fuente, NEGRO, 350, 250)
+        mostrar_texto("2. Media", fuente, NEGRO, 350, 300)
+        mostrar_texto("3. Difícil", fuente, NEGRO, 350, 350)
+
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                return
+            if evento.type == pygame.KEYDOWN:
+                if evento.key == pygame.K_1:  # Dificultad baja
+                    print("Dificultad baja seleccionada")
+                    iniciar_juego("baja")
+                    return
+                elif evento.key == pygame.K_2:  # Dificultad media
+                    print("Dificultad media seleccionada")
+                    iniciar_juego("media")
+                    return
+                elif evento.key == pygame.K_3:  # Dificultad difícil
+                    print("Dificultad difícil seleccionada")
+                    iniciar_juego("dificil")
+                    return
+        
+        pygame.display.update()
+
+# Función para iniciar el juego
+def iniciar_juego(dificultad):
+    direccion_actual = 'abajo'
+    print(f"Iniciando juego con dificultad {dificultad}")
+    corriendo = True
+    while corriendo:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                corriendo = False
+            if evento.type == pygame.KEYDOWN:
                 # Crear un nuevo proyectil del jugador
                 proyectil_rect = pygame.Rect(jugador.centerx - proyectil_tamaño // 2,
                                              jugador.centery - proyectil_tamaño // 2, proyectil_tamaño,
@@ -501,7 +570,10 @@ while corriendo:
     pygame.display.flip()
     reloj.tick(30)
 
-# Al terminar el juego, puedes imprimir los resultados
-print(f"Cuadrados amarillos destruidos por el jugador: {cuadrados_destruidos_jugador}")
-print(f"Cuadrados amarillos destruidos por los enemigos: {cuadrados_destruidos_enemigos}")
-pygame.quit()
+    pygame.display.update()
+    pygame.quit()
+
+
+# Ejecutar el juego
+if __name__ == "__main__":
+    menu_principal()    
