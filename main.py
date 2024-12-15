@@ -400,10 +400,15 @@ def mostrar_mensaje_fin_juego(mensaje):
     pantalla.blit(texto, (ancho // 2 - texto.get_width() // 2, alto // 2 - texto.get_height() // 2))
     pygame.display.flip()
     pygame.time.wait(3000)  # Espera de 3 segundos antes de cerrar
+#______________________________
+
 
 # Definir colores
 BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
+
+dificultad = "baja"  # Se puede cambiar a 'media' o 'dificil' según la elección
+
 
 # Configurar la pantalla
 pantalla = pygame.display.set_mode((800, 600))
@@ -446,6 +451,7 @@ def seleccionar_dificultad():
         mostrar_texto("1. Baja", fuente, NEGRO, 350, 250)
         mostrar_texto("2. Media", fuente, NEGRO, 350, 300)
         mostrar_texto("3. Difícil", fuente, NEGRO, 350, 350)
+        mostrar_texto("Escoge una opción", fuente, NEGRO, 250, 450)
 
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
@@ -453,20 +459,31 @@ def seleccionar_dificultad():
                 return
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_1:  # Dificultad baja
-                    print("Dificultad baja seleccionada")
-                    iniciar_juego("baja")
+                    dificultad = "baja"
+                    iniciar_juego(dificultad)
                     return
                 elif evento.key == pygame.K_2:  # Dificultad media
-                    print("Dificultad media seleccionada")
-                    iniciar_juego("media")
+                    dificultad = "media"
+                    iniciar_juego(dificultad)
                     return
                 elif evento.key == pygame.K_3:  # Dificultad difícil
-                    print("Dificultad difícil seleccionada")
-                    iniciar_juego("dificil")
+                    dificultad = "dificil"
+                    iniciar_juego(dificultad)
                     return
-        
-        pygame.display.update()
 
+def iniciar_juego(dificultad):
+    if dificultad == "baja":
+        velocidad_enemigos = 2
+        numero_enemigos = 5
+    elif dificultad == "media":
+        velocidad_enemigos = 4
+        numero_enemigos = 10
+    elif dificultad == "dificil":
+        velocidad_enemigos = 6
+        numero_enemigos = 15
+
+    # Iniciar el juego con las configuraciones de dificultad
+    jugar(velocidad_enemigos, numero_enemigos)
 # Función para iniciar el juego
 def iniciar_juego(dificultad):
     direccion_actual = 'abajo'
@@ -576,4 +593,4 @@ def iniciar_juego(dificultad):
 
 # Ejecutar el juego
 if __name__ == "__main__":
-    menu_principal()    
+    menu_principal()
